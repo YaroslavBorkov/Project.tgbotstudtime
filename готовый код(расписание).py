@@ -2,18 +2,36 @@
 import telebot
 import datetime
 import time
+from telebot import types
 
 # Токен бота, который выдается в процессе создания бота Telegram, вставляем вместо 'ваш токен'
 bot = telebot.TeleBot('7830171145:AAEOU0N9FDRUbehoUpo_4GZYFsTPuFRKtlc')
 
+# Создание клавиатуры с кнопками
+keyboard = types.ReplyKeyboardMarkup(row_width=1)
+button1 = types.KeyboardButton("Расписание")
+button2 = types.KeyboardButton("Дедлайны")
+button3 = types.KeyboardButton("Каникулы и сессии")
+keyboard.add(button1, button2, button3)
+
 # Обработка команды /start
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.reply_to(message, "Привет, я бот с расписанием занятий!")
+    bot.send_message(message.chat.id, "Привет, я бот с расписанием занятий! Выберите действие:", reply_markup=keyboard)
+
+# Обработка нажатий на кнопки
+@bot.message_handler(func=lambda message: True)
+def handle_buttons(message):
+    if message.text == "Расписание":
+        bot.reply_to(send_today_schedule(chat_id=1984839991))
+    elif message.text == "Дедлайны":
+        bot.reply_to(message, "тут пока ничего нет(")
+    elif message.text == "Каникулы и сессии":
+        bot.reply_to(message, "тут пока ничего нет(")
 
 # bot.polling()
 
-# Список с расписанием занятий (в моём случае списка 2, т.к. у меня есть чётная неделя и нечётная) Чётная = Schedule 2, Нечётная  Schedule 1
+# Список с расписанием занятий, Чётная = Schedule 2, Нечётная  Schedule 1
 schedule1 = {
     # 'Monday': [
         # {'Время': '13:50', 'Предмет': 'Л-309, Автоматизация систем электроснабжения(лек)'}, # "перое знач.":"второе знач." - меняем только второе значение, под свои задачи.
@@ -45,7 +63,6 @@ schedule1 = {
 }
 
  # Дни недели можно удалять или добавлять. Главное сохранить синтаксис списка, не потерять символы. Название дня недели должно быть на английском языке.
-
 schedule2 = {
     'Monday': [
         {'Время': '11:10 - 12:30', 'Предмет': 'БП-216, практика, Программирование на С++'},
@@ -75,17 +92,15 @@ schedule2 = {
     ]
 }
 
-# Получаем текущую дату с помощью библиотеки datetime
-now = datetime.datetime.now()
+now = datetime.datetime.now()        # Получаем текущую дату с помощью библиотеки datetime
 
-# Получаем номер недели в году с помощью библиотеки datetime
-week_number = now.isocalendar()[1]
+week_number = now.isocalendar()[1]   # Получаем номер недели в году с помощью библиотеки datetime
 
 # Если номер недели чётный, то неделя чётная, иначе - нечётная
-if week_number % 2 == 0:                                            # Этот блок if else можно исключить из кода, т.к. он не влияет на тг бота
-    print("Текущая неделя чётная")                                  # Я использую его для проверки в командной строке, что код запустился и работает
-else:                                                               # Если всё идёт по плану, то появится надпись "Текущая неделя чётная/нечётная" в зависимости от недели
-    print("Текущая неделя нечётная")                                #
+# if week_number % 2 == 0:                                            # Этот блок if else можно исключить из кода, т.к. он не влияет на тг бота
+#     print("Текущая неделя чётная")                                  # Я использую его для проверки в командной строке, что код запустился и работает
+# else:                                                               # Если всё идёт по плану, то появится надпись "Текущая неделя чётная/нечётная" в зависимости от недели
+#     print("Текущая неделя нечётная")
 
 # Функция для получения расписания на текущий день
 def get_today_schedule():
@@ -112,17 +127,17 @@ def send_today_schedule(chat_id):
     bot.send_message(chat_id, format_schedule(get_today_schedule()))     # bot.send_message отправляет данные в чат с ботом
 
 # Задаем обработчик команды /schedule
-@bot.message_handler(commands=['schedule'])
-def send_schedule(message):
-    send_today_schedule('1984839991')        # Вместо "айди чата с ботом" вставляем chatid своего чата
+# @bot.message_handler(commands=['schedule'])
+# def send_schedule(message):
+#     send_today_schedule('1984839991')        # Вместо "айди чата с ботом" вставляем chatid своего чата
 
 # Определяем интервал для автоматической отправки расписания
-interval = 60 * 60  # Отправлять расписание каждый час (измеряется в секундах, поэтому 60 сек * 60 = 1 час)
-
-# Запускаем цикл для автоматической отправки расписания
-while True:
-    send_today_schedule('1984839991')  # Замените <chat_id> на идентификатор нужного чата
-    time.sleep(interval)                      # time.sleep запускает таймер ожидания с перменной interval
+# interval = 60 * 60  # Отправлять расписание каждый час (измеряется в секундах, поэтому 60 сек * 60 = 1 час)
+#
+# # Запускаем цикл для автоматической отправки расписания
+# while True:
+#     send_today_schedule('1984839991')  # Замените <chat_id> на идентификатор нужного чата
+#     time.sleep(interval)                      # time.sleep запускает таймер ожидания с перменной interval
 
 bot.polling()   # Запускаем бота
 
