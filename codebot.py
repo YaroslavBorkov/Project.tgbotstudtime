@@ -6,6 +6,10 @@ from telebot import types
 
 # Токен бота, который выдается в процессе создания бота Telegram, вставляем вместо 'ваш токен'
 bot = telebot.TeleBot('7830171145:AAEOU0N9FDRUbehoUpo_4GZYFsTPuFRKtlc')
+# Обработка команды /start
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    bot.send_message(message.chat.id, "Привет, я бот с расписанием занятий! Выберите действие:", reply_markup=keyboard)
 
 # Создание клавиатуры с кнопками
 keyboard = types.ReplyKeyboardMarkup(row_width=1)
@@ -14,22 +18,17 @@ button2 = types.KeyboardButton("Дедлайны")
 button3 = types.KeyboardButton("Каникулы и сессии")
 keyboard.add(button1, button2, button3)
 
-# Обработка команды /start
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    bot.send_message(message.chat.id, "Привет, я бот с расписанием занятий! Выберите действие:", reply_markup=keyboard)
+
 
 # Обработка нажатий на кнопки
 @bot.message_handler(func=lambda message: True)
 def handle_buttons(message):
     if message.text == "Расписание":
-        bot.reply_to(send_today_schedule(chat_id=1984839991))
+        bot.send_message(1984839991, format_schedule(get_today_schedule()))
     elif message.text == "Дедлайны":
         bot.reply_to(message, "тут пока ничего нет(")
     elif message.text == "Каникулы и сессии":
         bot.reply_to(message, "тут пока ничего нет(")
-
-# bot.polling()
 
 # Список с расписанием занятий, Чётная = Schedule 2, Нечётная  Schedule 1
 schedule1 = {
@@ -93,14 +92,7 @@ schedule2 = {
 }
 
 now = datetime.datetime.now()        # Получаем текущую дату с помощью библиотеки datetime
-
 week_number = now.isocalendar()[1]   # Получаем номер недели в году с помощью библиотеки datetime
-
-# Если номер недели чётный, то неделя чётная, иначе - нечётная
-# if week_number % 2 == 0:                                            # Этот блок if else можно исключить из кода, т.к. он не влияет на тг бота
-#     print("Текущая неделя чётная")                                  # Я использую его для проверки в командной строке, что код запустился и работает
-# else:                                                               # Если всё идёт по плану, то появится надпись "Текущая неделя чётная/нечётная" в зависимости от недели
-#     print("Текущая неделя нечётная")
 
 # Функция для получения расписания на текущий день
 def get_today_schedule():
@@ -122,6 +114,7 @@ def format_schedule(schedule):
             result += f"{lesson['Время']} - {lesson['Предмет']}\n"       # Элементы «последовательности» перебираются один за другим «переменной» цикла; если быть точным, переменная указывает на элементы.
         return result                                                    # "+-" - это инкрементальные конкатенации в цикле. Тема не самая простая, об этом позже. f-строки позволяют форматировать информацию в нужном нам виде
 
+
 # Функция для отправки расписания на текущий день в чат
 def send_today_schedule(chat_id):
     bot.send_message(chat_id, format_schedule(get_today_schedule()))     # bot.send_message отправляет данные в чат с ботом
@@ -133,14 +126,12 @@ def send_today_schedule(chat_id):
 
 # Определяем интервал для автоматической отправки расписания
 # interval = 60 * 60  # Отправлять расписание каждый час (измеряется в секундах, поэтому 60 сек * 60 = 1 час)
-#
-# # Запускаем цикл для автоматической отправки расписания
+# Запускаем цикл для автоматической отправки расписания
 # while True:
 #     send_today_schedule('1984839991')  # Замените <chat_id> на идентификатор нужного чата
 #     time.sleep(interval)                      # time.sleep запускает таймер ожидания с перменной interval
 
-bot.polling()   # Запускаем бота
-
+bot.polling(none_stop=True, interval=0)   # Запускаем бота
 #В этом примере бот отвечает на команду /schedule отправкой расписания занятий на текущий день в чат.
 # Также цикл While отправляет расписание в заданный чат каждый заданный интервал времени.
 # Вы можете использовать этот пример как основу для своего Telegram-бота с расписанием занятий и автоматической отправкой.
